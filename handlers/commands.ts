@@ -43,15 +43,15 @@ async function processDateCheck(ctx: any, dateStr: string) {
   prevDate.setDate(date.getDate() - 1);
   const nextDate = new Date(date);
   nextDate.setDate(date.getDate() + 1);
-  
   const message = [
-    `${isWeekendDay(date) ? "🎉" : "💼"}  ${formatDate(date)} - ${isWeekendDay(date) ? messages.dayOff : messages.workDay}`,
+    `⬅️ ${formatDate(prevDate)}: ${isWeekendDay(prevDate) ?  messages.dayOff : messages.workDay}`,
     `----------------------------`,
-    `${isWeekendDay(prevDate) ? "🎉" : "💼"}  ${formatDate(prevDate)} -  ${isWeekendDay(prevDate) ? messages.dayOff : messages.workDay}`,
-    `${isWeekendDay(nextDate) ? "🎉" : "💼"}  ${formatDate(nextDate)} -  ${isWeekendDay(nextDate) ? messages.dayOff : messages.workDay}`,
+    `📅 *${formatDate(date)}: ${isWeekendDay(date) ?  messages.dayOff : messages.workDay} *`,
+    `----------------------------`,
+    `➡️ ${formatDate(nextDate)}: ${isWeekendDay(nextDate) ?  messages.dayOff :  messages.workDay}`,
   ].join("\n");
 
-  await ctx.reply(message);
+  await ctx.reply(message, { parse_mode: "Markdown" });
 }
 
 async function sendMonthView(ctx: any, date: Date) {
