@@ -1,4 +1,4 @@
-import { Bot, Keyboard } from "https://deno.land/x/grammy@v1.36.1/mod.ts";
+import { Bot } from "https://deno.land/x/grammy@v1.36.1/mod.ts";
 import { isWeekendDay } from "../utils/date-checker.ts";
 import { parseDate, formatDate } from "../utils/date-parser.ts";
 import { messages } from "../utils/translations.ts";
@@ -7,79 +7,51 @@ import { messages } from "../utils/translations.ts";
 export function registerCommands(bot: Bot) {
   // Start command with simplified keyboard
   bot.command("start", async (ctx) => {
-    const keyboard = new Keyboard().text(messages.week).text(messages.month);
-
-    await ctx.reply(messages.welcome, {
-      reply_markup: keyboard,
-    });
+    await ctx.reply(messages.welcome);
   });
 
-  // Handle keyboard buttons - only week and month
-  bot.hears(messages.week, async (ctx) => {
-    await sendWeekView(ctx, new Date());
-  });
-
-  bot.hears(messages.month, async (ctx) => {
+  // Add month command
+  bot.command("monthly", async (ctx) => {
     await sendMonthView(ctx, new Date());
   });
 
-  // Check date command
-  bot.command("check", async (ctx) => {
-    const dateStr = ctx.message?.text.split(" ")[1];
-    if (!dateStr) {
-      await ctx.reply(messages.provideDateFormat);
-      return;
-    }
-
-    const date = parseDate(dateStr);
-    if (!date) {
-      await ctx.reply(messages.invalidDateFormat);
-      return;
-    }
-
-    // Get surrounding dates
-    const prevDate = new Date(date);
-    prevDate.setDate(date.getDate() - 1);
-    const nextDate = new Date(date);
-    nextDate.setDate(date.getDate() + 1);
-
-    const message = [
-      `${formatDate(prevDate)}: ${
-        isWeekendDay(prevDate) ? messages.dayOff : messages.workDay
-      }`,
-      `${formatDate(date)}: ${
-        isWeekendDay(date) ? messages.dayOff : messages.workDay
-      }`,
-      `${formatDate(nextDate)}: ${
-        isWeekendDay(nextDate) ? messages.dayOff : messages.workDay
-      }`,
-    ].join("\n");
-
-    await ctx.reply(message);
-  });
-
-  // Handle unknown commands
+  // Handle all messages, detect and process dates automatically
   bot.on("message", async (ctx) => {
     if (ctx.message.text?.startsWith("/")) {
+      // Handle unknown commands
       await ctx.reply(messages.unknownCommand);
+      return;
+    }
+
+    if (ctx.message.text) {
+      // Try to parse the text as a date
+      await processDateCheck(ctx, ctx.message.text);
     }
   });
 }
 
-async function sendWeekView(ctx: any, date: Date) {
-  const weekDates = getWeekDates(date);
-  const message = [messages.weekHeader]
-    .concat(
-      weekDates.map(
-        (d) =>
-          `${formatDate(d)}: ${
-            isWeekendDay(d) ? messages.dayOff : messages.workDay
-          }`
-      )
-    )
-    .join("\n");
+// Helper function to process date checks
+async function processDateCheck(ctx: any, dateStr: string) {
+  const date = parseDate(dateStr);
+  if (!date) {
+    await ctx.reply(messages.invalidDateFormat);
+    return;
+  }
 
-  await ctx.reply(message);
+  // Get surrounding dates
+  const prevDate = new Date(date);
+  prevDate.setDate(date.getDate() - 1);
+  const nextDate = new Date(date);
+  nextDate.setDate(date.getDate() + 1);
+
+  const message = [
+    `📅 *${formatDate(date)}*: ${isWeekendDay(date) ? "🎉 " + messages.dayOff : "💼 " + messages.workDay}`,
+    `-------------------------------------------`,
+    `⬅️ ${formatDate(prevDate)}: ${isWeekendDay(prevDate) ? "🎉 " + messages.dayOff : "💼 " + messages.workDay}`,
+    `➡️ ${formatDate(nextDate)}: ${isWeekendDay(nextDate) ? "🎉 " + messages.dayOff : "💼 " + messages.workDay}`,
+  ].join("\n");
+
+  await ctx.reply(message, { parse_mode: "Markdown" });
 }
 
 async function sendMonthView(ctx: any, date: Date) {
@@ -96,19 +68,6 @@ async function sendMonthView(ctx: any, date: Date) {
     .join("\n");
 
   await ctx.reply(message);
-}
-
-function getWeekDates(date: Date): Date[] {
-  const dates = [];
-  const start = new Date(date);
-  start.setDate(date.getDate() - 3);
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    dates.push(d);
-  }
-  return dates;
 }
 
 function getMonthDates(date: Date): Date[] {
