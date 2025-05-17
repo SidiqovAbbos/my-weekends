@@ -1,18 +1,41 @@
-import { Bot } from "https://deno.land/x/grammy@v1.36.1/mod.ts";
+import { Bot, Keyboard } from "https://deno.land/x/grammy@v1.36.1/mod.ts";
 import { isWeekendDay } from "../utils/date-checker.ts";
 import { parseDate, formatDate } from "../utils/date-parser.ts";
 import { messages } from "../utils/translations.ts";
 
 // Register all command handlers
 export function registerCommands(bot: Bot) {
-  // Start command
+  // Start command with keyboard
   bot.command("start", async (ctx) => {
-    await ctx.reply(messages.welcome);
+    const keyboard = new Keyboard()
+      .text(messages.today)
+      .text(messages.tomorrow)
+      .row()
+      .text(messages.week)
+      .text(messages.month);
+
+    await ctx.reply(messages.welcome, {
+      reply_markup: keyboard,
+    });
   });
 
-  // Help command
-  bot.command("help", async (ctx) => {
-    await ctx.reply(messages.help);
+  // Handle keyboard buttons
+  bot.hears(messages.today, async (ctx) => {
+    await sendDateInfo(ctx, new Date());
+  });
+
+  bot.hears(messages.tomorrow, async (ctx) => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    await sendDateInfo(ctx, tomorrow);
+  });
+
+  bot.hears(messages.week, async (ctx) => {
+    await sendWeekView(ctx, new Date());
+  });
+
+  bot.hears(messages.month, async (ctx) => {
+    await sendMonthView(ctx, new Date());
   });
 
   // Check date command
@@ -50,12 +73,70 @@ export function registerCommands(bot: Bot) {
     await ctx.reply(message);
   });
 
-  // Add more commands here...
-
   // Handle unknown commands
   bot.on("message", async (ctx) => {
     if (ctx.message.text?.startsWith("/")) {
       await ctx.reply(messages.unknownCommand);
     }
   });
+}
+
+async function sendDateInfo(ctx: any, date: Date) {
+  const weekDates = getWeekDates(date);
+  const message = [messages.weekHeader]
+    .concat(
+      weekDates.map(
+        (d) =>
+          `${formatDate(d)}: ${
+            isWeekendDay(d) ? messages.dayOff : messages.workDay
+          }`
+      )
+    )
+    .join("\n");
+
+  await ctx.reply(message);
+}
+
+async function sendWeekView(ctx: any, date: Date) {
+  await sendDateInfo(ctx, date);
+}
+
+async function sendMonthView(ctx: any, date: Date) {
+  const monthDates = getMonthDates(date);
+  const message = [messages.monthHeader]
+    .concat(
+      monthDates.map(
+        (d) =>
+          `${formatDate(d)}: ${
+            isWeekendDay(d) ? messages.dayOff : messages.workDay
+          }`
+      )
+    )
+    .join("\n");
+
+  await ctx.reply(message);
+}
+
+function getWeekDates(date: Date): Date[] {
+  const dates = [];
+  const start = new Date(date);
+  start.setDate(date.getDate() - 3);
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function getMonthDates(date: Date): Date[] {
+  const dates = [];
+  const start = new Date(date.getFullYear(), date.getMonth(), 1);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+  for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
+    dates.push(new Date(d));
+  }
+  return dates;
 }
