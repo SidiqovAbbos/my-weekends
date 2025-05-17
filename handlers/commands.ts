@@ -28,7 +28,7 @@ export function registerCommands(bot: Bot) {
       "• Рабочие дни отмечены иконкой 💼",
       "• Бот поддерживает проверку дат в разных форматах",
     ].join("\n");
-    
+
     await ctx.reply(helpText, { parse_mode: "Markdown" });
   });
 
@@ -91,42 +91,18 @@ async function sendMonthView(ctx: any, date: Date) {
 
   // Create a formatted header
   const header = `📆 *${monthName.toUpperCase()} ${year}*`;
-
-  // Group dates by weeks for better readability
-  const weeks: Date[][] = [];
-  let currentWeek: Date[] = [];
-
-  monthDates.forEach((d, index) => {
-    currentWeek.push(d);
-
-    // Start a new week after Sunday (0) or after the last date
-    if (d.getDay() === 0 || index === monthDates.length - 1) {
-      weeks.push([...currentWeek]);
-      currentWeek = [];
-    }
+  
+  // Format each date directly
+  const formattedDates = monthDates.map(d => {
+    const isWeekend = isWeekendDay(d);
+    return `${formatDate(d)}: ${isWeekend ? messages.dayOff : messages.workDay}`;
   });
-
-  // Format each week
-  const formattedWeeks = weeks.map((week) => {
-    return week
-      .map((d) => {
-        const isWeekend = isWeekendDay(d);
-        const emoji = isWeekend ? "🎉" : "💼";
-        // Add bold formatting for weekends
-        const dayText = isWeekend
-          ? `*${formatDate(d)}: ${messages.dayOff}*`
-          : `${formatDate(d)}: ${messages.workDay}`;
-
-        return `${emoji} ${dayText}`;
-      })
-      .join("\n");
-  });
-
+  
   // Join all parts with separators
   const message = [
     header,
     "--------------------------------",
-    ...formattedWeeks.map((week, i) => `📅 *Неделя ${i + 1}*\n${week}`),
+    formattedDates.join("\n")
   ].join("\n\n");
 
   await ctx.reply(message, { parse_mode: "Markdown" });
