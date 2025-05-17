@@ -1,0 +1,19 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --allow-env --allow-read main.ts",
+    "dev": "deno run --allow-net --allow-env --allow-read --watch main.ts"
+  },
+  "imports": {
+    "grammy": "https://deno.land/x/grammy@v1.36.1/mod.ts",
+    "std/": "https://deno.land/std@0.208.0/"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "deploy": {
+    "project": "my-weekends-bot",
+    "exclude": [".git", "README.md", ".env", ".env.example"]
+  }
+}

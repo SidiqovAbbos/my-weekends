@@ -1,0 +1,10 @@
+# Deno
+# Ignore the Deno cache directory
+/.deno/
+/cache/
+
+# Ignore the Deno lock file
+deno.lock
+
+#Env files
+.env
