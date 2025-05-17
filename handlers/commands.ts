@@ -5,31 +5,16 @@ import { messages } from "../utils/translations.ts";
 
 // Register all command handlers
 export function registerCommands(bot: Bot) {
-  // Start command with keyboard
+  // Start command with simplified keyboard
   bot.command("start", async (ctx) => {
-    const keyboard = new Keyboard()
-      .text(messages.today)
-      .text(messages.tomorrow)
-      .row()
-      .text(messages.week)
-      .text(messages.month);
+    const keyboard = new Keyboard().text(messages.week).text(messages.month);
 
     await ctx.reply(messages.welcome, {
       reply_markup: keyboard,
     });
   });
 
-  // Handle keyboard buttons
-  bot.hears(messages.today, async (ctx) => {
-    await sendDateInfo(ctx, new Date());
-  });
-
-  bot.hears(messages.tomorrow, async (ctx) => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    await sendDateInfo(ctx, tomorrow);
-  });
-
+  // Handle keyboard buttons - only week and month
   bot.hears(messages.week, async (ctx) => {
     await sendWeekView(ctx, new Date());
   });
@@ -81,7 +66,7 @@ export function registerCommands(bot: Bot) {
   });
 }
 
-async function sendDateInfo(ctx: any, date: Date) {
+async function sendWeekView(ctx: any, date: Date) {
   const weekDates = getWeekDates(date);
   const message = [messages.weekHeader]
     .concat(
@@ -95,10 +80,6 @@ async function sendDateInfo(ctx: any, date: Date) {
     .join("\n");
 
   await ctx.reply(message);
-}
-
-async function sendWeekView(ctx: any, date: Date) {
-  await sendDateInfo(ctx, date);
 }
 
 async function sendMonthView(ctx: any, date: Date) {
