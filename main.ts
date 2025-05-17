@@ -48,6 +48,10 @@ if (import.meta.main) {
     await startBot();
   } catch (error) {
     console.error("Failed to start the bot:", error);
-    Deno.exit(1);
+
+    // In Deno Deploy, just log the error
+    if (!CONFIG.IS_DENO_DEPLOY) {
+      Deno.exit(1);
+    }
   }
 }
