@@ -7,10 +7,8 @@ async function startBot() {
     // Use webhook in production
     const webhookUrl = `${CONFIG.WEBHOOK_URL}/telegram-webhook`;
 
-    // Start the bot with webhook
     await bot.api.setWebhook(webhookUrl);
 
-    // Start server to listen for webhook updates
     Deno.serve({ port: CONFIG.PORT }, async (req) => {
       if (req.url.endsWith("/telegram-webhook") && req.method === "POST") {
         const update = await req.json();
@@ -33,7 +31,6 @@ async function startBot() {
       `Bot is running in production mode with webhook at ${webhookUrl}`
     );
   } else {
-    // Use long polling in development
     await bot.start({
       drop_pending_updates: CONFIG.DROP_PENDING_UPDATES,
       allowed_updates: ["message", "callback_query"],
@@ -49,7 +46,6 @@ if (import.meta.main) {
   } catch (error) {
     console.error("Failed to start the bot:", error);
 
-    // In Deno Deploy, just log the error
     if (!CONFIG.IS_DENO_DEPLOY) {
       Deno.exit(1);
     }
