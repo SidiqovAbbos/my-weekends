@@ -1,8 +1,16 @@
-import { bot } from "./bot.ts";
+import { bot, initBot } from "./bot.ts";
 import { CONFIG } from "./config.ts";
 
 // Start function with webhook support for production
 async function startBot() {
+  // Ensure bot is initialized first (critical for webhook mode)
+  if (CONFIG.ENV === "production") {
+    const initialized = await initBot();
+    if (!initialized) {
+      throw new Error("Failed to initialize bot");
+    }
+  }
+
   if (CONFIG.ENV === "production" && CONFIG.WEBHOOK_URL) {
     // Use webhook in production
     const webhookUrl = `${CONFIG.WEBHOOK_URL}/telegram-webhook`;
@@ -31,6 +39,7 @@ async function startBot() {
       `Bot is running in production mode with webhook at ${webhookUrl}`
     );
   } else {
+    // Use long polling in development (will call init automatically)
     await bot.start({
       drop_pending_updates: CONFIG.DROP_PENDING_UPDATES,
       allowed_updates: ["message", "callback_query"],

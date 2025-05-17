@@ -24,7 +24,29 @@ bot.catch((err) => {
   }
 });
 
-// Register all command handlers
-registerCommands(bot);
+// Initialize bot function - must be called before using webhooks
+export async function initBot() {
+  try {
+    // Initialize the bot to fetch information about the bot
+    await bot.init();
+    console.log(`Bot initialized as @${bot.botInfo.username}`);
+
+    // Register all command handlers
+    registerCommands(bot);
+
+    return true;
+  } catch (error) {
+    console.error("Failed to initialize bot:", error);
+    return false;
+  }
+}
+
+// Initialize the bot immediately if in production to handle webhook properly
+if (CONFIG.ENV === "production") {
+  initBot().catch(console.error);
+} else {
+  // For development, we'll initialize later when starting with polling
+  registerCommands(bot);
+}
 
 export { bot };
