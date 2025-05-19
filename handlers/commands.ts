@@ -69,11 +69,11 @@ async function processDateCheck(ctx: any, dateStr: string) {
     `⬅️ ${formatDate(prevDate)}: ${
       isWeekendDay(prevDate) ? messages.dayOff : messages.workDay
     }`,
-    `----------------------------`,
+    `--------------------------`,
     `📅 *${formatDate(date)}: ${
       isWeekendDay(date) ? messages.dayOff : messages.workDay
     } *`,
-    `----------------------------`,
+    `--------------------------`,
     `➡️ ${formatDate(nextDate)}: ${
       isWeekendDay(nextDate) ? messages.dayOff : messages.workDay
     }`,
